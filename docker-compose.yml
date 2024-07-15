@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: league_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - postgres-db-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: league_db
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: FootballLeague
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres-db-network
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  postgres-db-network:
+    driver: bridge
